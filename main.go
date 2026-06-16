@@ -5,23 +5,14 @@ import (
 	"sync/atomic"
 )
 
-// func (cfg *Config) middlewareMetricsInc(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
-
-func (cfg *Config) AppHandler() http.Handler {
-	cfg.fileserverHits.Add(1)
-	return http.StripPrefix("/app", http.FileServer(http.Dir(".")))
-}
-
 func main() {
-	sMux := http.NewServeMux()
+	// initialize server config state
 	cfg := Config{
 		fileserverHits: atomic.Int32{},
 	}
+
+	//Create serverMux and register handlers
+	sMux := http.NewServeMux()
 
 	sMux.HandleFunc("GET /api/healthz", ApiHealthz)
 	sMux.HandleFunc("POST /api/validate_chirp", ApiValidateChirp)
@@ -29,8 +20,11 @@ func main() {
 	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)
 	sMux.HandleFunc("POST /admin/reset", cfg.AdminReset)
 
-	sMux.Handle("/app/", cfg.AppHandler())
+	// file server handler
+	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
+	sMux.Handle("/app/", cfg.MiddlewareMetricsInc(fsHandler))
 
+	// initialize server struct and start serving
 	s := &http.Server{
 		Addr:    ":8080",
 		Handler: sMux,
