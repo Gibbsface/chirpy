@@ -5,6 +5,10 @@ import (
 	"sync/atomic"
 )
 
+type Config struct {
+	fileserverHits atomic.Int32
+}
+
 func main() {
 	// initialize server config state
 	cfg := Config{
