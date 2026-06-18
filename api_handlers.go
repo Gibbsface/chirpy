@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type requestJSON struct {
@@ -11,7 +12,7 @@ type requestJSON struct {
 }
 
 type responseJSON struct {
-	Valid bool `json:"valid"`
+	Cleaned_body string `json:"cleaned_body"`
 }
 
 type errJSON struct {
@@ -25,7 +26,7 @@ func ApiValidateChirp(w http.ResponseWriter, r *http.Request) {
 	reqJSON := requestJSON{}
 	err := decoder.Decode(&reqJSON)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Something went wrong")
+		respondWithError(w, http.StatusBadRequest, "Could not read JSON request.")
 		return
 	}
 
@@ -35,11 +36,31 @@ func ApiValidateChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// at this point, we know the chirp has a valid length, now we need to clean it
+	cleanChirp := cleanChirp(reqJSON.Body)
+
 	// handle valid response
 	respondWithJSON(w, http.StatusOK, responseJSON{
-		Valid: true,
+		Cleaned_body: cleanChirp,
 	})
 
+}
+
+func cleanChirp(chirp string) string {
+	tokens := strings.Split(chirp, " ")
+
+	profanity := make(map[string]struct{})
+	profanity["kerfuffle"] = struct{}{}
+	profanity["sharbert"] = struct{}{}
+	profanity["fornax"] = struct{}{}
+
+	for i, t := range tokens {
+		if _, ok := profanity[strings.ToLower(t)]; ok {
+			tokens[i] = "****"
+		}
+	}
+
+	return strings.Join(tokens, " ")
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload any) {
