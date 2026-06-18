@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -11,12 +12,40 @@ type requestJSON struct {
 	Body string `json:"body"`
 }
 
+type createUserReqJSON struct {
+	Email string `json:"email"`
+}
+
 type responseJSON struct {
 	Cleaned_body string `json:"cleaned_body"`
 }
 
 type errJSON struct {
 	Error string `json:"error"`
+}
+
+func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
+	// attempt to decode JSON from request
+	decoder := json.NewDecoder(r.Body)
+	reqJSON := &createUserReqJSON{}
+	err := decoder.Decode(reqJSON)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Could not read JSON request")
+		return
+	}
+
+	// at this point, we know that reqJSON is valid
+	user, err := cfg.db.CreateUser(r.Context(), reqJSON.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error creating user")
+		return
+	}
+
+	// at this point, we know the user was created. Print the results
+	fmt.Printf("User created with email %v\n", user.Email)
+
+	//reply with JSON
+	respondWithJSON(w, http.StatusCreated, user)
 }
 
 func ApiValidateChirp(w http.ResponseWriter, r *http.Request) {

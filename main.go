@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	platform       string
 	fileserverHits atomic.Int32
 	db             *database.Queries
 }
@@ -32,6 +33,7 @@ func main() {
 	cfg := Config{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
+		platform:       os.Getenv("PLATFORM"),
 	}
 
 	//Create serverMux and register handlers
@@ -39,6 +41,7 @@ func main() {
 
 	sMux.HandleFunc("GET /api/healthz", ApiHealthz)
 	sMux.HandleFunc("POST /api/validate_chirp", ApiValidateChirp)
+	sMux.HandleFunc("POST /api/users", cfg.ApiCreateUser)
 
 	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)
 	sMux.HandleFunc("POST /admin/reset", cfg.AdminReset)
