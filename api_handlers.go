@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type requestJSON struct {
@@ -14,6 +17,13 @@ type requestJSON struct {
 
 type createUserReqJSON struct {
 	Email string `json:"email"`
+}
+
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
 }
 
 type responseJSON struct {
@@ -41,11 +51,18 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	JSONuser := User{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Email:     user.Email,
+	}
+
 	// at this point, we know the user was created. Print the results
 	fmt.Printf("User created with email %v\n", user.Email)
 
 	//reply with JSON
-	respondWithJSON(w, http.StatusCreated, user)
+	respondWithJSON(w, http.StatusCreated, JSONuser)
 }
 
 func ApiValidateChirp(w http.ResponseWriter, r *http.Request) {
