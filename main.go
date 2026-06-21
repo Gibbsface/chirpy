@@ -40,7 +40,7 @@ func main() {
 	sMux := http.NewServeMux()
 
 	sMux.HandleFunc("GET /api/healthz", ApiHealthz)
-	sMux.HandleFunc("POST /api/validate_chirp", ApiValidateChirp)
+	sMux.HandleFunc("POST /api/chirps", cfg.ApiCreateChirp)
 	sMux.HandleFunc("POST /api/users", cfg.ApiCreateUser)
 
 	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)

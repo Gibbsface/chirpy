@@ -1,0 +1,60 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+// type requestJSON struct {
+// 	Body string `json:"body"`
+// }
+
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+}
+
+type createUserRequestJSON struct {
+	Email string `json:"email"`
+}
+
+type createUserResponseJSON struct {
+	Cleaned_body string `json:"cleaned_body"`
+}
+
+func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
+	// attempt to decode JSON from request
+	decoder := json.NewDecoder(r.Body)
+	reqJSON := &createUserRequestJSON{}
+	err := decoder.Decode(reqJSON)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Could not read JSON request")
+		return
+	}
+
+	// at this point, we know that reqJSON is valid
+	user, err := cfg.db.CreateUser(r.Context(), reqJSON.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error creating user")
+		return
+	}
+
+	JSONuser := User{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Email:     user.Email,
+	}
+
+	// at this point, we know the user was created. Print the results
+	fmt.Printf("User created with email %v\n", user.Email)
+
+	//reply with JSON
+	respondWithJSON(w, http.StatusCreated, JSONuser)
+}
