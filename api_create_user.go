@@ -4,17 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
-
-	"github.com/google/uuid"
 )
-
-type createUserResponseJSON struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-}
 
 type createUserRequestJSON struct {
 	Email string `json:"email"`
@@ -37,7 +27,7 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resJSON := createUserResponseJSON{
+	resJSON := userJSON{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,

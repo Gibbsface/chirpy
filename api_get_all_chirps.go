@@ -12,9 +12,9 @@ func (cfg *Config) ApiGetAllChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Error: while fetching all chirps from db.")
 	}
 
-	resJSON := make([]createChirpResponseJSON, 0)
+	resJSON := make([]chirpJSON, 0)
 	for _, c := range chirps {
-		resJSON = append(resJSON, createChirpResponseJSON{
+		resJSON = append(resJSON, chirpJSON{
 			ID:        c.ID,
 			CreatedAt: c.CreatedAt,
 			UpdatedAt: c.UpdatedAt,
