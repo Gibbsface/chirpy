@@ -9,11 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// type requestJSON struct {
-// 	Body string `json:"body"`
-// }
-
-type User struct {
+type createUserResponseJSON struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -22,10 +18,6 @@ type User struct {
 
 type createUserRequestJSON struct {
 	Email string `json:"email"`
-}
-
-type createUserResponseJSON struct {
-	Cleaned_body string `json:"cleaned_body"`
 }
 
 func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +37,7 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSONuser := User{
+	resJSON := createUserResponseJSON{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -56,5 +48,5 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("User created with email %v\n", user.Email)
 
 	//reply with JSON
-	respondWithJSON(w, http.StatusCreated, JSONuser)
+	respondWithJSON(w, http.StatusCreated, resJSON)
 }
