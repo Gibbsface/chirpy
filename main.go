@@ -45,6 +45,7 @@ func main() {
 	sMux.HandleFunc("GET /api/chirps/{chirpID}", cfg.ApiGetChirp)
 
 	sMux.HandleFunc("POST /api/users", cfg.ApiCreateUser)
+	sMux.HandleFunc("POST /api/login", cfg.ApiLogin)
 
 	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)
 	sMux.HandleFunc("POST /admin/reset", cfg.AdminReset)

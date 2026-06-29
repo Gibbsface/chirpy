@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/Gibbsface/chirpy.git/internal/auth"
+	"github.com/Gibbsface/chirpy.git/internal/database"
 )
 
 type createUserRequestJSON struct {
-	Email string `json:"email"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -20,8 +24,17 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//hash the pw
+	hash, err := auth.HashPassword(reqJSON.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error hashing the password.")
+	}
+
 	// at this point, we know that reqJSON is valid
-	user, err := cfg.db.CreateUser(r.Context(), reqJSON.Email)
+	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:    reqJSON.Email,
+		Password: hash,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating user")
 		return
