@@ -1,12 +1,37 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
+
+func MakeRefreshToken() string {
+	key := make([]byte, 32)
+	rand.Read(key)
+	return hex.EncodeToString(key)
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("Error: Auth header does not exist.\n")
+	}
+
+	token, ok := strings.CutPrefix(authHeader, "Bearer ")
+	if !ok {
+		return "", fmt.Errorf("Error: malformed Authorization header.\n\t%v", authHeader)
+	}
+
+	return token, nil
+}
 
 func HashPassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)

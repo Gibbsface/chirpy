@@ -4,17 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Gibbsface/chirpy.git/internal/auth"
 	"github.com/Gibbsface/chirpy.git/internal/database"
 )
 
 type createUserRequestJSON struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Password         string `json:"password"`
+	Email            string `json:"email"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
 }
 
-func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
+func (c *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 	// attempt to decode JSON from request
 	decoder := json.NewDecoder(r.Body)
 	reqJSON := &createUserRequestJSON{}
@@ -24,15 +26,24 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//at this point we know the JSON request has been successfully parsed into reqJSON
+	//let's extract values into local variables that are easier to read
+	email := reqJSON.Email
+	password := reqJSON.Password
+	expiresInSeconds := 3600 // default
+	if reqJSON.ExpiresInSeconds != 0 {
+		expiresInSeconds = reqJSON.ExpiresInSeconds
+	}
+
 	//hash the pw
-	hash, err := auth.HashPassword(reqJSON.Password)
+	hash, err := auth.HashPassword(password)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error hashing the password.")
 	}
 
 	// at this point, we know that reqJSON is valid
-	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
-		Email:    reqJSON.Email,
+	user, err := c.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:    email,
 		Password: hash,
 	})
 	if err != nil {
@@ -40,11 +51,18 @@ func (cfg *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//create a JWT token for them
+	token, err := auth.MakeJWT(user.ID, c.secret, time.Duration(time.Second*time.Duration(expiresInSeconds)))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error: could not make JWT")
+	}
+
 	resJSON := userJSON{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
+		Token:     token,
 	}
 
 	// at this point, we know the user was created. Print the results

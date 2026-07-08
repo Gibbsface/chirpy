@@ -1,11 +1,29 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+func TestGetBearerToken(t *testing.T) {
+	secret := "Nwn6xysO0WDB2g3dfGyyEFCzv69jRNjeYn5KLeoOwNQ1Sr19nalCisR4qNIPeEuVy8FSkdfe26l6VFhwsOX69A"
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Set("Authorization", "Bearer Nwn6xysO0WDB2g3dfGyyEFCzv69jRNjeYn5KLeoOwNQ1Sr19nalCisR4qNIPeEuVy8FSkdfe26l6VFhwsOX69A")
+
+	token, err := GetBearerToken(req.Header)
+
+	if err != nil {
+		t.Errorf("Failed: %v", err)
+	}
+
+	if token != secret {
+		t.Errorf("Failed: token and secret do not match.\n\tsecret: %v\n\ttoken: %v\n", secret, token)
+	}
+}
 
 func TestValid(t *testing.T) {
 	secret := "mysecret"
