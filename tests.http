@@ -1,0 +1,23 @@
+# POST http://localhost:8080/admin/reset
+
+# POST http://localhost:8080/api/users
+# Content-Type: application/json
+
+# {
+#     "password": "testing123",
+# 	"email": "cgibbs@gmail.com"
+# }
+
+# POST http://localhost:8080/api/login
+# Content-Type: application/json
+
+# {
+#     "password": "testing123",
+# 	"email": "cgibbs@gmail.com"
+# }
+
+# POST http://localhost:8080/api/refresh
+# Authorization: Bearer fb6b4e43911833d51559fcafaea085484cbedf285eea0a73418315fd30ab9a48
+
+POST http://localhost:8080/api/revoke
+Authorization: Bearer 860d35b9cb3c30fed83a0bbf97f5bc7cc47ccfe7ddb06c794007e47e34fbb13d"

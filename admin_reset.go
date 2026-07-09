@@ -13,7 +13,10 @@ func (cfg *Config) AdminReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// reset metrics counter
 	cfg.fileserverHits.Swap(0)
+
+	// reset user db
 	err := cfg.db.ResetUsers(r.Context())
 	if err != nil {
 		fmt.Printf("Error while dropping users: %v", err)

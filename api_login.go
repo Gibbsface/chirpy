@@ -12,9 +12,9 @@ import (
 )
 
 type loginUserRequestJSON struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	// ExpiresInSeconds int    `json:"expires_in_seconds"`
 }
 
 type loginUserResponseJSON struct {
@@ -38,22 +38,22 @@ func (c *Config) ApiLogin(w http.ResponseWriter, r *http.Request) {
 
 	//at this point we know the JSON request has been successfully parsed into reqJSON
 	//let's extract values into local variables that are easier to read
-	email := reqJSON.Email
-	password := reqJSON.Password
-	expiresInSeconds := 3600 // 1 hr default
-	if reqJSON.ExpiresInSeconds != 0 {
-		expiresInSeconds = reqJSON.ExpiresInSeconds
-	}
+	// email := reqJSON.Email
+	// password := reqJSON.Password
+	// expiresInSeconds := 3600 // 1 hr default
+	// if reqJSON.ExpiresInSeconds != 0 {
+	// 	expiresInSeconds = reqJSON.ExpiresInSeconds
+	// }
 
 	// try to fetch the user obj in db
-	user, err := c.db.GetUserByEmail(r.Context(), email)
+	user, err := c.db.GetUserByEmail(r.Context(), reqJSON.Email)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find user with email %s\n\t%v", email, err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find user with email %s", reqJSON.Email))
 		return
 	}
 
 	// verify their password is correct
-	isValid, err := auth.CheckPasswordHash(password, user.Password)
+	isValid, err := auth.CheckPasswordHash(reqJSON.Password, user.Password)
 	if !isValid {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect Email or Password")
 		return
@@ -63,20 +63,23 @@ func (c *Config) ApiLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// at this point, we know the user has successfully logged in
+	fmt.Printf("Logged in %s\n", user.Email)
+
 	//create a JWT token for them
-	expiresIn := time.Duration(time.Second * time.Duration(expiresInSeconds))
-	tokenJWT, err := auth.MakeJWT(user.ID, c.secret, expiresIn)
+	expiresIn := time.Duration(3600 * time.Second) // default 1 hour
+	jwtToken, err := auth.MakeJWT(user.ID, c.secret, expiresIn)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error: could not make JWT")
 	}
 
 	// create access token, store in database
-	accessTokenInDB, err := c.db.CreateToken(r.Context(), database.CreateTokenParams{
+	refreshToken, err := c.db.CreateToken(r.Context(), database.CreateTokenParams{
 		Token:  auth.MakeRefreshToken(),
 		UserID: user.ID,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error: could not create access token.")
+		respondWithError(w, http.StatusInternalServerError, "Error: could not create refresh token.")
 	}
 
 	resJSON := loginUserResponseJSON{
@@ -84,8 +87,8 @@ func (c *Config) ApiLogin(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 		Email:        user.Email,
-		Token:        tokenJWT,
-		RefreshToken: accessTokenInDB.Token,
+		Token:        jwtToken,
+		RefreshToken: refreshToken.Token,
 	}
 
 	// fmt.Printf("token generated: %s\n", resJSON.Token)

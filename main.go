@@ -47,16 +47,21 @@ func main() {
 	//Create serverMux and register handlers
 	sMux := http.NewServeMux()
 
+	//admin
+	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)
+	sMux.HandleFunc("POST /admin/reset", cfg.AdminReset)
+
+	//GET
 	sMux.HandleFunc("GET /api/healthz", ApiHealthz)
-	sMux.HandleFunc("POST /api/chirps", cfg.ApiCreateChirp)
 	sMux.HandleFunc("GET /api/chirps", cfg.ApiGetAllChirps)
 	sMux.HandleFunc("GET /api/chirps/{chirpID}", cfg.ApiGetChirp)
 
+	// POST
+	sMux.HandleFunc("POST /api/chirps", cfg.ApiCreateChirp)
 	sMux.HandleFunc("POST /api/users", cfg.ApiCreateUser)
 	sMux.HandleFunc("POST /api/login", cfg.ApiLogin)
-
-	sMux.HandleFunc("GET /admin/metrics", cfg.AdminMetrics)
-	sMux.HandleFunc("POST /admin/reset", cfg.AdminReset)
+	sMux.HandleFunc("POST /api/refresh", cfg.ApiRefresh)
+	sMux.HandleFunc("POST /api/revoke", cfg.ApiRevoke)
 
 	// file server handler
 	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))

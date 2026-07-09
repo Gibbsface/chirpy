@@ -8,12 +8,20 @@ import (
 
 	"github.com/Gibbsface/chirpy.git/internal/auth"
 	"github.com/Gibbsface/chirpy.git/internal/database"
+	"github.com/google/uuid"
 )
 
 type createUserRequestJSON struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+type createUserResponseJSON struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+	// Token     string    `json:"token"`
 }
 
 func (c *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -30,10 +38,7 @@ func (c *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 	//let's extract values into local variables that are easier to read
 	email := reqJSON.Email
 	password := reqJSON.Password
-	expiresInSeconds := 3600 // default
-	if reqJSON.ExpiresInSeconds != 0 {
-		expiresInSeconds = reqJSON.ExpiresInSeconds
-	}
+	// expiresInSeconds := 3600 // default
 
 	//hash the pw
 	hash, err := auth.HashPassword(password)
@@ -52,17 +57,17 @@ func (c *Config) ApiCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create a JWT token for them
-	token, err := auth.MakeJWT(user.ID, c.secret, time.Duration(time.Second*time.Duration(expiresInSeconds)))
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error: could not make JWT")
-	}
+	// token, err := auth.MakeJWT(user.ID, c.secret, time.Duration(time.Second*time.Duration(expiresInSeconds)))
+	// if err != nil {
+	// 	respondWithError(w, http.StatusInternalServerError, "Error: could not make JWT")
+	// }
 
-	resJSON := userJSON{
+	resJSON := createUserResponseJSON{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
-		Token:     token,
+		// Token:     token,
 	}
 
 	// at this point, we know the user was created. Print the results
