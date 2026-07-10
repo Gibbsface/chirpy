@@ -31,6 +31,7 @@ func (c *Config) ApiCreateChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
+	// fmt.Printf("token from header: %s\n", jwt)
 	id, err := auth.ValidateJWT(jwt, c.secret)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "JWT implied the wrong uuid")
