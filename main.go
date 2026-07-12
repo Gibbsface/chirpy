@@ -63,6 +63,12 @@ func main() {
 	sMux.HandleFunc("POST /api/refresh", cfg.ApiRefresh)
 	sMux.HandleFunc("POST /api/revoke", cfg.ApiRevoke)
 
+	// PUT
+	sMux.HandleFunc("PUT /api/users", cfg.ApiUpdateUser)
+
+	// DELETE
+	sMux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.ApiDeleteChirp)
+
 	// file server handler
 	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
 	sMux.Handle("/app/", cfg.MiddlewareMetricsInc(fsHandler))
